@@ -1,22 +1,451 @@
 <!DOCTYPE html>
-<html lang="en">
-    <head>
-        <meta charset="UTF-8" />
-        <link rel="stylesheet" href="styles.css" />
-        <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-        <title>PakePlus App</title>
-        <script type="module" src="/main.js" defer></script>
-    </head>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>角色数据编辑器</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 20px;
+            background-color: #f5f5f5;
+        }
+        .container {
+            display: flex;
+            gap: 20px;
+        }
+        .editor-section, .preview-section {
+            flex: 1;
+            background-color: white;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        h1 {
+            color: #333;
+            text-align: center;
+        }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 20px;
+        }
+        th, td {
+            border: 1px solid #ddd;
+            padding: 8px;
+            text-align: left;
+        }
+        th {
+            background-color: #f2f2f2;
+        }
+        tr:nth-child(even) {
+            background-color: #f9f9f9;
+        }
+        .form-group {
+            margin-bottom: 15px;
+        }
+        label {
+            display: block;
+            margin-bottom: 5px;
+            font-weight: bold;
+        }
+        input, select {
+            width: 100%;
+            padding: 8px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            box-sizing: border-box;
+        }
+        button {
+            background-color: #4CAF50;
+            color: white;
+            padding: 10px 15px;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            margin-right: 10px;
+        }
+        button:hover {
+            background-color: #45a049;
+        }
+        .button-group {
+            margin-top: 20px;
+        }
+        .json-preview {
+            background-color: #f8f8f8;
+            padding: 15px;
+            border-radius: 4px;
+            border: 1px solid #ddd;
+            max-height: 300px;
+            overflow-y: auto;
+            font-family: monospace;
+            white-space: pre-wrap;
+        }
+        .search-box {
+            margin-bottom: 20px;
+        }
+    </style>
+</head>
+<body>
+    <h1>角色数据编辑器</h1>
+    
+    <div class="container">
+        <div class="editor-section">
+            <div class="search-box">
+                <input type="text" id="searchInput" placeholder="搜索角色..." onkeyup="searchRoles()">
+            </div>
+            
+            <div class="form-group">
+                <label for="roleId">角色ID:</label>
+                <input type="text" id="roleId">
+            </div>
+            
+            <div class="form-group">
+                <label for="roleName">角色名称:</label>
+                <input type="text" id="roleName">
+            </div>
+            
+            <div class="form-group">
+                <label for="attack">攻击力:</label>
+                <input type="number" id="attack" step="0.1">
+            </div>
+            
+            <div class="form-group">
+                <label for="speed">移动速度:</label>
+                <input type="number" id="speed" step="0.01">
+            </div>
+            
+            <div class="form-group">
+                <label for="difficulty">操作难度:</label>
+                <input type="number" id="difficulty" step="0.1">
+            </div>
+            
+            <div class="form-group">
+                <label for="motor">机动性:</label>
+                <input type="number" id="motor" step="0.1">
+            </div>
+            
+            <div class="form-group">
+                <label for="live">生存能力:</label>
+                <input type="number" id="live" step="0.1">
+            </div>
+            
+            <div class="form-group">
+                <label for="bursts">爆发能力:</label>
+                <input type="number" id="bursts" step="0.1">
+            </div>
+            
+            <div class="form-group">
+                <label for="scale">缩放比例:</label>
+                <input type="number" id="scale" step="0.01">
+            </div>
+            
+            <div class="form-group">
+                <label for="group">系列:</label>
+                <input type="text" id="group">
+            </div>
+            
+            <div class="form-group">
+                <label for="tags">标签(用逗号分隔):</label>
+                <input type="text" id="tags">
+            </div>
+            
+            <div class="form-group">
+                <label for="author">作者:</label>
+                <input type="text" id="author">
+            </div>
+            
+            <div class="button-group">
+                <button onclick="addRole()">添加角色</button>
+                <button onclick="updateRole()">更新角色</button>
+                <button onclick="deleteRole()">删除角色</button>
+                <button onclick="clearForm()">清空表单</button>
+            </div>
+        </div>
+        
+        <div class="preview-section">
+            <h2>角色列表</h2>
+            <table id="roleTable">
+                <thead>
+                    <tr>
+                        <th>ID</th>
+                        <th>名称</th>
+                        <th>系列</th>
+                        <th>操作</th>
+                    </tr>
+                </thead>
+                <tbody id="roleTableBody">
+                    <!-- 角色列表将在这里动态生成 -->
+                </tbody>
+            </table>
+            
+            <h2>JSON预览</h2>
+            <div class="json-preview" id="jsonPreview">
+                <!-- JSON数据将在这里显示 -->
+            </div>
+            
+            <div class="button-group">
+                <button onclick="exportJSON()">导出JSON</button>
+                <button onclick="importJSON()">导入JSON</button>
+            </div>
+        </div>
+    </div>
 
-    <body>
-        <main class="container">
-            <h1>Welcome to PakePlus</h1>
+    <script>
+        // 初始角色数据
+        let roles = [
+            {"id":"1","roleid":"LiangNianLuFei","name":"两年后路飞","attack":"100","speed":"2.15","difficulty":"2","motor":"3","live":"3","bursts":"4.7","scale":"1","group":"海贼王","open":"","tags":"无敌,强力","author":"肥叶"},
+        ];
 
-            <form class="row" id="greet-form">
-                <input id="greet-input" placeholder="Enter a name..." />
-                <button type="submit">Greet</button>
-            </form>
-            <p id="greet-msg"></p>
-        </main>
-    </body>
+        let selectedRoleId = null;
+
+        // 初始化页面
+        document.addEventListener('DOMContentLoaded', function() {
+            renderRoleTable();
+            updateJsonPreview();
+        });
+
+        // 渲染角色表格
+        function renderRoleTable(filteredRoles = null) {
+            const tableBody = document.getElementById('roleTableBody');
+            tableBody.innerHTML = '';
+            
+            const rolesToRender = filteredRoles || roles;
+            
+            rolesToRender.forEach(role => {
+                const row = document.createElement('tr');
+                row.innerHTML = `
+                    <td>${role.id}</td>
+                    <td>${role.name}</td>
+                    <td>${role.group}</td>
+                    <td>
+                        <button onclick="editRole('${role.id}')">编辑</button>
+                    </td>
+                `;
+                tableBody.appendChild(row);
+            });
+        }
+
+        // 搜索角色
+        function searchRoles() {
+            const searchTerm = document.getElementById('searchInput').value.toLowerCase();
+            if (!searchTerm) {
+                renderRoleTable();
+                return;
+            }
+            
+            const filteredRoles = roles.filter(role => 
+                role.name.toLowerCase().includes(searchTerm) || 
+                role.group.toLowerCase().includes(searchTerm) ||
+                role.tags.toLowerCase().includes(searchTerm)
+            );
+            
+            renderRoleTable(filteredRoles);
+        }
+
+        // 编辑角色
+        function editRole(id) {
+            const role = roles.find(r => r.id === id);
+            if (!role) return;
+            
+            selectedRoleId = id;
+            document.getElementById('roleId').value = role.roleid;
+            document.getElementById('roleName').value = role.name;
+            document.getElementById('attack').value = role.attack;
+            document.getElementById('speed').value = role.speed;
+            document.getElementById('difficulty').value = role.difficulty;
+            document.getElementById('motor').value = role.motor;
+            document.getElementById('live').value = role.live;
+            document.getElementById('bursts').value = role.bursts;
+            document.getElementById('scale').value = role.scale;
+            document.getElementById('group').value = role.group;
+            document.getElementById('tags').value = role.tags;
+            document.getElementById('author').value = role.author;
+        }
+
+        // 添加角色
+        function addRole() {
+            const newId = (roles.length > 0) ? Math.max(...roles.map(r => parseInt(r.id))) + 1 : 1;
+            
+            const newRole = {
+                id: newId.toString(),
+                roleid: document.getElementById('roleId').value,
+                name: document.getElementById('roleName').value,
+                attack: document.getElementById('attack').value,
+                speed: document.getElementById('speed').value,
+                difficulty: document.getElementById('difficulty').value,
+                motor: document.getElementById('motor').value,
+                live: document.getElementById('live').value,
+                bursts: document.getElementById('bursts').value,
+                scale: document.getElementById('scale').value,
+                group: document.getElementById('group').value,
+                open: "",
+                tags: document.getElementById('tags').value,
+                author: document.getElementById('author').value
+            };
+            
+            roles.push(newRole);
+            renderRoleTable();
+            updateJsonPreview();
+            clearForm();
+        }
+
+        // 更新角色
+        function updateRole() {
+            if (!selectedRoleId) {
+                alert('请先选择一个角色进行编辑');
+                return;
+            }
+            
+            const roleIndex = roles.findIndex(r => r.id === selectedRoleId);
+            if (roleIndex === -1) return;
+            
+            roles[roleIndex] = {
+                id: selectedRoleId,
+                roleid: document.getElementById('roleId').value,
+                name: document.getElementById('roleName').value,
+                attack: document.getElementById('attack').value,
+                speed: document.getElementById('speed').value,
+                difficulty: document.getElementById('difficulty').value,
+                motor: document.getElementById('motor').value,
+                live: document.getElementById('live').value,
+                bursts: document.getElementById('bursts').value,
+                scale: document.getElementById('scale').value,
+                group: document.getElementById('group').value,
+                open: "",
+                tags: document.getElementById('tags').value,
+                author: document.getElementById('author').value
+            };
+            
+            renderRoleTable();
+            updateJsonPreview();
+            clearForm();
+            selectedRoleId = null;
+        }
+
+        // 删除角色
+        function deleteRole() {
+            if (!selectedRoleId) {
+                alert('请先选择一个角色');
+                return;
+            }
+            
+            if (confirm('确定要删除这个角色吗？')) {
+                roles = roles.filter(r => r.id !== selectedRoleId);
+                renderRoleTable();
+                updateJsonPreview();
+                clearForm();
+                selectedRoleId = null;
+            }
+        }
+
+        // 清空表单
+        function clearForm() {
+            document.getElementById('roleId').value = '';
+            document.getElementById('roleName').value = '';
+            document.getElementById('attack').value = '';
+            document.getElementById('speed').value = '';
+            document.getElementById('difficulty').value = '';
+            document.getElementById('motor').value = '';
+            document.getElementById('live').value = '';
+            document.getElementById('bursts').value = '';
+            document.getElementById('scale').value = '';
+            document.getElementById('group').value = '';
+            document.getElementById('tags').value = '';
+            document.getElementById('author').value = '';
+            selectedRoleId = null;
+        }
+
+        // 更新JSON预览
+        function updateJsonPreview() {
+            document.getElementById('jsonPreview').textContent = JSON.stringify({
+                data: roles,
+                doc: {
+                    "roles.xml": "数据表ID",
+                    "id": "索引ID",
+                    "roleid": "角色ID",
+                    "name": "角色名称",
+                    "attack": "攻击力",
+                    "speed": "移动速度",
+                    "difficulty": "操作难度",
+                    "motor": "机动性",
+                    "live": "生存能力",
+                    "bursts": "爆发能力",
+                    "scale": "缩放比例",
+                    "group": "系列",
+                    "open": "开放",
+                    "tags": "标签",
+                    "author": "作者"
+                }
+            }, null, 2);
+        }
+
+        // 导出JSON
+        function exportJSON() {
+            const data = {
+                data: roles,
+                doc: {
+                    "roles.xml": "数据表ID",
+                    "id": "索引ID",
+                    "roleid": "角色ID",
+                    "name": "角色名称",
+                    "attack": "攻击力",
+                    "speed": "移动速度",
+                    "difficulty": "操作难度",
+                    "motor": "机动性",
+                    "live": "生存能力",
+                    "bursts": "爆发能力",
+                    "scale": "缩放比例",
+                    "group": "系列",
+                    "open": "开放",
+                    "tags": "标签",
+                    "author": "作者"
+                }
+            };
+            
+            const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = 'roles_data.json';
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+            URL.revokeObjectURL(url);
+        }
+
+        // 导入JSON
+        function importJSON() {
+            const input = document.createElement('input');
+            input.type = 'file';
+            input.accept = '.json';
+            
+            input.onchange = e => {
+                const file = e.target.files[0];
+                if (!file) return;
+                
+                const reader = new FileReader();
+                reader.onload = event => {
+                    try {
+                        const importedData = JSON.parse(event.target.result);
+                        if (importedData.data && Array.isArray(importedData.data)) {
+                            roles = importedData.data;
+                            renderRoleTable();
+                            updateJsonPreview();
+                            alert('数据导入成功！');
+                        } else {
+                            alert('导入的文件格式不正确');
+                        }
+                    } catch (error) {
+                        alert('解析JSON文件时出错: ' + error.message);
+                    }
+                };
+                reader.readAsText(file);
+            };
+            
+            input.click();
+        }
+    </script>
+</body>
 </html>
